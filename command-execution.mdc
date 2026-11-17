@@ -1,72 +1,39 @@
 ---
-description: 
-globs: 
+description: Run commands instead of telling the user to run them
 alwaysApply: true
 ---
+
 # Command Execution
 
-Rule for automatically executing commands instead of suggesting them to the user.
+When the work needs a command, run it. Do not hand the command to the user and wait.
 
-<rule>
-name: command_execution
-description: Standards for handling command execution in conversations
-filters:
-  - type: event
-    pattern: "command_suggestion"
-  - type: content
-    pattern: ".*(?:run|execute|install|setup).*"
+## Run it
 
-actions:
-  - type: suggest
-    message: |
-      When handling commands:
+- Run the command instead of suggesting that the user run it.
+- Do not ask for permission unless the command is destructive.
+- Adding or upgrading a package follows Dependency Safety, including asking when the package manager cannot be identified.
 
-      1. Direct Execution:
-         ```
-         - Always execute commands directly instead of suggesting them
-         - Use run_terminal_cmd tool immediately
-         - Don't ask for permission unless the command is destructive
-         ```
+## Environment
 
-      2. Environment Awareness:
-         ```
-         - Check for devbox/environment requirements first
-         - Switch to correct shell if needed
-         - Verify environment before running commands
-         ```
+- Switch to the correct shell when the project requires one.
+- Check the environment before running the command.
 
-      3. Error Handling:
-         ```
-         - Handle common errors (missing tools, wrong shell)
-         - Suggest fixes for environment issues
-         - Chain commands if dependencies are needed
-         ```
+## Errors
 
-      4. Command Context:
-         ```
-         - Include explanation of what command does
-         - Log relevant output
-         - Handle command output appropriately
-         ```
+- Handle a missing tool or the wrong shell.
+- Fix an environment problem, or say what is missing and how to fix it.
+- Chain commands when one depends on another.
 
-examples:
-  - input: |
-      # Instead of:
-      "You'll need to run: npm install"
+## Context
 
-      # Do:
-      <run_terminal_cmd>npm install</run_terminal_cmd>
-    output: "Direct command execution"
+- Say what the command does.
+- Keep the relevant output.
+- Use the output. Do not ignore a failure and continue as if the command succeeded.
 
-  - input: |
-      # Instead of:
-      "First install node with: brew install node"
+### Install a tool
 
-      # Do:
-      <run_terminal_cmd>brew install node</run_terminal_cmd>
-    output: "Direct dependency installation"
+Instead of saying "First install node with: brew install node", run:
 
-metadata:
-  priority: high
-  version: 1.0
-</rule> 
+```bash
+brew install node
+```

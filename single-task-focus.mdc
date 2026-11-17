@@ -1,93 +1,66 @@
 ---
-description: 
-globs: 
+description: Change only the code that the current task requires
 alwaysApply: true
 ---
+
 # Single Task Focus
 
-Rule for ensuring each code change focuses on exactly one task at a time.
+Each change does one task. Leave unrelated improvements for a separate task.
 
-<rule>
-name: single_task_focus
-description: Standards for maintaining single-task focus in code changes
-filters:
-  - type: event
-    pattern: "code_change"
-  - type: event
-    pattern: "feature_request"
-  - type: event
-    pattern: "bug_fix"
+## Boundaries
 
-actions:
-  - type: suggest
-    message: |
-      When making code changes:
+- Modify only code that the current task requires.
+- Leave unrelated refactors and improvements alone.
+- Save other issues for their own tasks.
+- Do not mix concerns from different features in one change.
 
-      1. Task Boundaries:
-         ```
-         - Only modify code directly related to current task
-         - Ignore unrelated improvements/refactoring opportunities
-         - Save other issues for separate tasks
-         - Do not mix concerns across different features
-         ```
+## Edits
 
-      2. Code Changes:
-         ```
-         - Edit only files necessary for current task
-         - Only modify lines relevant to task
-         - Skip unrelated formatting/style fixes
-         - Resist urge to "clean up while you're there"
-         ```
+- Edit only the files the current task needs.
+- Change only the lines the task needs.
+- Skip formatting and style fixes outside the task.
+- Do not clean up neighboring code because you are already in the file.
 
-      3. Review Before Submit:
-         ```
-         - Verify each changed line relates to task
-         - Remove unrelated changes
-         - Split unrelated improvements into new tasks
-         - Keep changes minimal and focused
-         ```
+## Before finishing
 
-      4. Common Violations to Avoid:
-         ```
-         - Fixing unrelated lint errors
-         - Updating unrelated dependencies
-         - Reformatting unrelated code
-         - Adding features beyond task scope
-         ```
+- Check that each changed line belongs to the task.
+- Remove unrelated changes.
+- Split an unrelated improvement into its own task.
+- Keep the change small.
 
-examples:
-  - input: |
-      # Task: Fix button click handler
+## Violations
 
-      # ❌ Don't do this:
-      - Fix button click handler
-      - Also reformat entire file
-      - Update some dependencies
-      - Fix typos in comments
+- Fixing an unrelated lint error.
+- Updating an unrelated dependency.
+- Reformatting code the task did not touch.
+- Adding behavior beyond the task.
 
-      # ✅ Do this:
-      - Only fix button click handler
-      - Save other improvements for later
+### Button handler
 
-  - input: |
-      # Task: Add new API endpoint
+Task: fix the button click handler.
 
-      # ❌ Don't do this:
-      function newEndpoint() {
-        // Add endpoint
-      }
+Do not also reformat the file, update dependencies, and fix typos in comments. Fix the handler. Save the rest.
 
-      // Also refactor old endpoints
-      function oldEndpoint() {
-        // Cleanup while here
-      }
+### API endpoint
 
-      # ✅ Do this:
-      function newEndpoint() {
-        // Only add new endpoint
-      }
+Task: add a new endpoint.
 
-metadata:
-  priority: high
-  version: 1.0
-</rule>
+Bad: add the endpoint and rewrite an old one in the same change.
+
+```javascript
+function newEndpoint() {
+  // Add endpoint
+}
+
+function oldEndpoint() {
+  // Cleanup while here
+}
+```
+
+Good: add only the new endpoint.
+
+```javascript
+function newEndpoint() {
+  // Only add new endpoint
+}
+```

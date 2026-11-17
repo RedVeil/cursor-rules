@@ -1,105 +1,76 @@
 ---
-description: Self-Correction After Mistakes
-globs: *
+description: After a user correction, stop, name the mistake, and state a rule for User Rules
 alwaysApply: true
 ---
 
 # Self-Correction After Mistakes
 
-Rule for creating a learning feedback loop when mistakes require user intervention.
+When the user has to correct a mistake, stop, find what was wrong, and state a rule so the same mistake is harder to repeat.
 
-<rule>
-name: self_correction
-description: Standards for analyzing and creating rules when mistakes require user intervention
-filters:
-  - type: event
-    pattern: "user_correction"
-  - type: content
-    pattern: "(?i)(?:mistake|error|wrong|incorrect|not right|fix|correction)"
-  - type: event
-    pattern: "error_recovery"
+## Stop and acknowledge
 
-actions:
+- Stop the current approach immediately.
+- Acknowledge the mistake explicitly.
+- Thank the user for the correction.
+- Do not continue with the incorrect approach, including a small variation of it.
 
-- type: suggest
-  message: |
-  When a mistake requires user intervention:
+## Find what was wrong
 
-  1. Immediate Stop and Acknowledge:
+- Name the specific misconception or error.
+- Say why the approach was incorrect.
+- Name the assumption that was wrong.
+- Note the information that was missing or misunderstood.
 
-     ```
-     - Stop current approach immediately
-     - Acknowledge the mistake explicitly
-     - Thank the user for correction
-     - Do not attempt to continue with incorrect approach
-     ```
+## State the rule
 
-  2. Root Cause Analysis:
+- In the reply, write the rule that would prevent the same mistake.
+- Include a concrete correct case and a concrete incorrect case.
+- Do not create a file. User Rules are not in the repository, and the user pastes the text into Customize → Rules if they want to keep it.
 
-     ```
-     - Identify the specific misconception or error
-     - Determine why the approach was incorrect
-     - Identify what assumptions were wrong
-     - Note what information was missing or misunderstood
-     ```
+## Apply it now
 
-  3. Create a Cursor Rule:
+- Use the correction on the current task immediately.
+- Start clean from the corrected understanding.
+- Use the user's guidance in the new approach.
 
-     ```
-     - Create a new rule to prevent similar mistakes
-     - Determine if rule belongs in global/ or project/
-       • global/: Generally applicable across projects
-       • project/: Specific to this project's requirements
-     - Follow cursor-rule-creation workflow (create in root, then move)
-     - Include specific examples of both correct and incorrect approaches
-     ```
+### Acknowledgement
 
-  4. Commit Rule and Reference:
+Bad:
 
-     ```
-     - Commit the rule to the appropriate location
-     - Reference the rule in your response
-     - Explain how the rule will prevent similar mistakes
-     ```
+```text
+"I'll just modify my approach slightly and continue..."
+```
 
-  5. Apply New Knowledge:
-     ```
-     - Immediately apply the insights from the correction
-     - Start with a clean approach based on correct understanding
-     - Reference user guidance in your new approach
-     ```
+Good:
 
-examples:
+```text
+"I see I've misunderstood X.
 
-- input: |
+Here's what went wrong:
 
-  # Bad: Continuing incorrect approach
+1. I assumed X when I should have understood Y
+2. I missed the constraint that Z must always be done
 
-  "I'll just modify my approach slightly and continue..."
+Here is the rule to add:
 
-  # Good: Stop, analyze, create rule
+When Z is required, do Z before continuing. Do not assume X."
+```
 
-  "I see I've misunderstood X. I'll create a rule to prevent this mistake in the future.
+### The rule itself
 
-  Here's what went wrong:
+Bad:
 
-  1. I assumed X when I should have understood Y
-  2. I missed the constraint that Z must always be done
+```text
+"I'll remember to do it correctly next time"
+```
 
-  Creating a new rule for this pattern now."
-  output: "Proper mistake acknowledgment and correction"
+Good:
 
-- input: |
-  # Bad: Vague rule
-  "I'll remember to do it correctly next time"
-  # Good: Specific rule
-  "Created rule self-correction.mdc to handle cases where:
-  - The build command requires specific environment variables
-  - The command needs to run from the project root
-  - The file structure differs from standard layout"
-    output: "Specific, actionable rule creation"
+```text
+"Add this to User Rules:
 
-metadata:
-priority: high
-version: 1.0
-</rule>
+The build command needs its environment variables, and it has to run from the project root. The file layout is not the standard one.
+
+Bad: run the build from a subdirectory with no environment.
+Good: from the project root, with the variables set, run the project's build command."
+```

@@ -1,161 +1,129 @@
 ---
-description: 
-globs: 
+description: When stuck or fixing a bug, stop retrying, find the cause, and fix that cause
 alwaysApply: true
 ---
- # Root Cause Analysis
 
-Rule for addressing the fundamental causes of issues rather than implementing workarounds.
+# Root Cause Analysis
 
-<rule>
-name: root_cause_analysis
-description: Standards for diagnosing and fixing the root cause of problems instead of creating workarounds
-filters:
-  - type: event
-    pattern: "bug_fix"
-  - type: content
-    pattern: ".*(?:error|bug|issue|fail|broken|crash|exception|workaround).*"
+When a bug appears, or the same attempt is repeating, find and fix the cause. Do not paper over the symptom.
 
-actions:
+## Stop when the same attempt is repeating
 
-- type: suggest
-  message: |
-  When addressing issues:
+- Stop the current approach immediately.
+- State what you know, what you do not know, and which assumption may be wrong.
+- Reframe the problem from first principles, and check that you are solving the right problem.
+- List the implicit assumptions and mark the ones that can be wrong. Consider a different mental model.
+- Consider a different approach, including an analogous problem in another domain. Ask what success would look like. Temporarily ignore a constraint if that reveals the shape of a solution, then put the constraint back before implementing.
 
-  1. Root Cause Identification:
+Instead of:
 
-     ```
-     - Always identify the fundamental source of the problem
-     - Trace back from symptoms to underlying causes
-     - Ask "why" at least 3-5 times to find true origin
-     - Look for patterns that suggest deeper issues
-     ```
+```text
+"Let me try again with a slightly different approach..."
+"That didn't work, let me try one more time..."
+"Let me make another small change and see if it works..."
+```
 
-  2. Avoid Workarounds:
+Do:
 
-     ```
-     - Do not mask symptoms with bandaid solutions
-     - Resist quick fixes that ignore core issues
-     - Never duplicate code to avoid dealing with underlying problems
-     - Reject "it works, don't touch it" mentality
-     ```
+```text
+"Let's step back and reconsider the fundamental problem."
+"I need to question my assumptions about how this works."
+"Let me create a minimal test case to isolate the exact issue."
+```
 
-  3. Systematic Diagnosis:
+Instead of trying another bit shift or another payload format, name the constraint:
 
-     ```
-     - Use debuggers, logs, and stack traces
-     - Reproduce the issue reliably in a controlled environment
-     - Isolate variables to determine exact failure points
-     - Document diagnosis steps for future reference
-     ```
+1. A bytes32 can hold 32 bytes (256 bits) total.
+2. The values to store are an address (20 bytes), an address (20 bytes), and a uint (32 bytes).
+3. That is 72 bytes, which exceeds 32 bytes.
 
-  4. Proper Fixes:
+The failure is a data structure mismatch, not a bit-shifting problem.
 
-     ```
-     - Fix at the earliest/deepest appropriate level
-     - Update relevant tests to cover the failure case
-     - Consider broader architectural implications
-     - Address all instances of the problem, not just one occurrence
-     ```
+## Find the cause
 
-  5. Knowledge Sharing:
-     ```
-     - Document the root cause and solution
-     - Update related documentation and comments
-     - Consider creating regression tests
-     - Share lessons learned to prevent similar issues
-     ```
+- Ask why repeatedly, at least 3 to 5 times, until the origin is clear. Look for a pattern that points past the symptom.
+- Reproduce the issue reliably in a controlled environment. Use the debugger, logs, and the stack trace.
+- Trace backward from the failure. Isolate variables until the failing point is exact.
+- Rank the checks by likelihood and cost. Test the smallest case that isolates the failure.
+- Break the problem into parts you can verify. Test each part on its own, and build up from the parts that are already known to work.
+- Write down the diagnosis steps so the same search does not start over.
 
-examples:
+## Fix that cause
 
-- input: |
+- Fix it at the earliest appropriate level.
+- Do not mask it with extra retries, a hardcoded offset, or a second copy of the logic.
+- Do not accept "it works, don't touch it" while the cause is still there.
+- Address every instance of the problem, not only the one in front of you.
+- Consider the architectural implication of the fix.
+- Add a regression test for the failure.
+- Record the cause and the fix. Update the related comments or docs, and leave enough behind that the same mistake is harder to repeat.
 
-  # Problem: API requests occasionally time out
+### Timeouts
 
-  # Bad (Workaround):
+Problem: API requests occasionally time out.
 
-  ```typescript
-  // Add more retries to mask the issue
-  const makeRequest = async () => {
-    for (let i = 0; i < 5; i++) {
-      try {
-        return await api.getData();
-      } catch (err) {
-        if (i === 4) throw err;
-        await sleep(1000);
-      }
-    }
-  }
-  ```
+Bad: add more retries so the symptom shows up less often.
 
-  # Good (Root Cause Fix):
-
-  ```typescript
-  // Diagnose and fix the actual timeout cause
-  // Found: Connection pool exhaustion due to unclosed connections
-  
-  const db = new Database({
-    maxConnections: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000
-  });
-
-  // Ensure connections are properly released
-  const makeRequest = async () => {
-    const client = await db.connect();
+```typescript
+const makeRequest = async () => {
+  for (let i = 0; i < 5; i++) {
     try {
-      return await client.query('SELECT * FROM data');
-    } finally {
-      client.release();
+      return await api.getData();
+    } catch (err) {
+      if (i === 4) throw err;
+      await sleep(1000);
     }
   }
-  ```
-  output: "Root cause fix vs. symptom masking"
+};
+```
 
-- input: |
+Good: the timeouts come from a connection pool exhausted by unclosed connections. Release the client.
 
-  # Problem: Dates rendering incorrectly in reports
+```typescript
+const db = new Database({
+  maxConnections: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-  # Bad (Workaround):
-
-  ```javascript
-  // Manual formatting to avoid timezone issues
-  function formatDate(date) {
-    // Hardcoded adjustments to make it "work"
-    const d = new Date(date);
-    d.setHours(d.getHours() + 12); // Hack to fix display
-    return d.toISOString().split('T')[0];
+const makeRequest = async () => {
+  const client = await db.connect();
+  try {
+    return await client.query("SELECT * FROM data");
+  } finally {
+    client.release();
   }
-  ```
+};
+```
 
-  # Good (Root Cause Fix):
+### Dates
 
-  ```javascript
-  // Properly address the date handling inconsistency
-  // Root cause: Inconsistent timezone handling between server and client
-  
-  // Server-side standardization
-  app.use((req, res, next) => {
-    // Ensure dates are serialized with timezone info
-    res.json = function(data) {
-      return originalJson.call(this, 
-        JSON.stringify(data, dateReplacer), 
-        ...arguments);
-    };
-    next();
-  });
-  
-  // Client-side proper parsing
-  function formatDate(isoString) {
-    return new Intl.DateTimeFormat('en-US', {
-      timeZone: 'UTC',
-      dateStyle: 'medium'
-    }).format(new Date(isoString));
-  }
-  ```
-  output: "Addressing timezone issues properly versus hacks"
+Problem: dates render incorrectly in reports.
 
-metadata:
-priority: high
-version: 1.0
-</rule>
+Bad: shift the clock so the display looks right.
+
+```javascript
+function formatDate(date) {
+  const d = new Date(date);
+  d.setHours(d.getHours() + 12);
+  return d.toISOString().split("T")[0];
+}
+```
+
+Good: the server and the client do not agree on timezone. Serialize with timezone information, and format in UTC on the client.
+
+```javascript
+app.use((req, res, next) => {
+  res.json = function (data) {
+    return originalJson.call(this, JSON.stringify(data, dateReplacer), ...arguments);
+  };
+  next();
+});
+
+function formatDate(isoString) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    dateStyle: "medium",
+  }).format(new Date(isoString));
+}
+```

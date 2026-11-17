@@ -1,119 +1,87 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
-# Sensitive Data Protection
-
-Rule for preventing hardcoded API keys and other sensitive data in source code.
-
----
-
 description: Prevents hardcoding API keys and sensitive data in source code
-globs: "\*"
 alwaysApply: true
-
 ---
 
-<rule>
-name: sensitive_data_protection
-description: Standards for handling sensitive data like API keys, passwords, and tokens
-filters:
-  - type: content
-    pattern: "(?i)(?:api[_-]?key|password|secret|token|credential)s?['\"]?\\s*[:=]\\s*['\"][^'\"]+['\"]"
-  - type: file_extension
-    pattern: "\\.(js|ts|jsx|tsx|py|rb|php|java|go|sh|bash|zsh|md|mdc|sol)$"
-  - type: file_path
-    pattern: "(?!.*\\.env(\\.example|\\.sample)?).*"
+# Sensitive Data
 
-actions:
+Do not hardcode secrets. Read them from the environment.
 
-- type: reject
-  conditions:
+## Never hardcode
 
-  - pattern: "(?i)(?:api[_-]?key|password|secret|token|credential)s?['\"]?\\s*[:=]\\s*['\"][^'\"]{8,}['\"]"
-    message: "Hardcoded sensitive data detected. Use environment variables instead."
+- API keys
+- Passwords
+- Private keys
+- Access tokens
+- Database credentials
+- Any other secret
 
-- type: suggest
-  message: |
-  When handling sensitive data:
+## Use the environment
 
-  1. NEVER hardcode sensitive data:
+- Store the values in a `.env` file and add that file to `.gitignore`.
+- Read them with `process.env.KEY_NAME`, `os.environ['KEY_NAME']`, or the equivalent in that language.
+- Load `.env` with dotenv or the project's existing mechanism.
+- Commit a `.env.example` that contains placeholder names and no real values.
 
-     ```
-     - API keys
-     - Passwords
-     - Private keys
-     - Access tokens
-     - Database credentials
-     - Any other secrets
-     ```
+## Scripts and deployment
 
-  2. ALWAYS use environment variables:
+- Pass secrets as environment variables.
+- Use the CI/CD secret store for deployed environments.
+- Do not log a secret.
+- Mask secret values in logs.
 
-     ```
-     - Store sensitive data in .env files (add to .gitignore)
-     - Access via process.env.KEY_NAME, os.environ['KEY_NAME'], etc.
-     - Use dotenv or similar libraries to load .env files
-     - Include .env.example with placeholder values
-     ```
+## Documentation
 
-  3. For scripts and deployment:
+- Use a placeholder such as `YOUR_API_KEY`.
+- Explain how to obtain the key and which variable to set.
+- Do not put a real credential in an example, a comment, or a doc.
 
-     ```
-     - Pass sensitive data as environment variables
-     - Use secret management services in CI/CD
-     - Never log sensitive values
-     - Mask sensitive values in logs
-     ```
+### Application code
 
-  4. For documentation:
-     ```
-     - Use placeholders like YOUR_API_KEY
-     - Provide clear instructions on obtaining and using keys
-     - Never include real credentials, even in examples
-     ```
+Bad:
 
-examples:
+```javascript
+const apiKey = "1a2b3c4d5e6f7g8h9i0j";
+```
 
-- input: |
+Good:
 
-  # Bad: Hardcoded API key
+```javascript
+const apiKey = process.env.API_KEY;
+```
 
-  const apiKey = "1a2b3c4d5e6f7g8h9i0j";
+### A command
 
-  # Good: Using environment variable
+Bad:
 
-  const apiKey = process.env.API_KEY;
-  output: "Using environment variables for sensitive data"
+```bash
+forge verify-contract --api-key "1a2b3c4d5e6f7g8h9i0j" $CONTRACT_ADDRESS
+```
 
-- input: |
+Good:
 
-  # Bad: Hardcoded credentials in a script
+```bash
+forge verify-contract --api-key "$ETHERSCAN_API_KEY" $CONTRACT_ADDRESS
+```
 
-  forge verify-contract --api-key "1a2b3c4d5e6f7g8h9i0j" $CONTRACT_ADDRESS
+### Configuration
 
-  # Good: Using environment variables
+Bad:
 
-  forge verify-contract --api-key "$ETHERSCAN_API_KEY" $CONTRACT_ADDRESS
-  output: "Using environment variables in scripts"
-
-- input: |
-  # Bad: Hardcoded values in configuration
-  module.exports = {
+```javascript
+module.exports = {
   database: {
-  password: "super_secret_password",
-  }
-  };
-  # Good: Using environment variables
-  module.exports = {
-  database: {
-  password: process.env.DB_PASSWORD,
-  }
-  };
-  output: "Using environment variables in configuration"
+    password: "super_secret_password",
+  },
+};
+```
 
-metadata:
-priority: critical
-version: 1.0
-</rule>
+Good:
+
+```javascript
+module.exports = {
+  database: {
+    password: process.env.DB_PASSWORD,
+  },
+};
+```

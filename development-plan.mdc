@@ -1,74 +1,57 @@
 ---
-description: 
-globs: 
+description: Implement one requirement at a time and verify it. Commit only when asked
 alwaysApply: true
 ---
 
 # Development Workflow
 
-Rule for implementing features in a sequential, verified manner.
+Implement a feature one requirement at a time. Verify each requirement before treating it as done.
 
-<rule>
-name: development_workflow
-description: Standards for implementing features based on user requirements
-filters:
-  - type: event
-    pattern: "feature_implementation"
-  - type: file_change
-    pattern: "*"
+## Requirements
 
-actions:
-  - type: suggest
-    message: |
-      When implementing features:
+- Read the requirements from the file the user provided.
+- Break them into units that can be implemented separately.
+- Confirm your understanding before starting.
 
-      1. Requirements Processing:
-         ```
-         - Read requirements from user-provided file
-         - Break down into implementable units
-         - Verify understanding before starting
-         ```
+## One requirement at a time
 
-      2. Implementation Cycle:
-         ```
-         - Work on one requirement at a time
-         - Build/compile after each change
-         - Run and verify functionality
-         - Test the implementation
-         - Commit only when requirement is complete
-         ```
+- Work on one requirement at a time.
+- Build or compile after each change.
+- Run the result and check the behavior.
+- Test the implementation.
+- Commit only when that requirement is complete and the user has asked for a commit.
 
-      3. Verification Steps:
-         ```
-         - Build/compile successfully
-         - Run without errors
-         - Test functionality
-         - Verify against requirement
-         - Clean up any debug code
-         ```
+## Verification
 
-      4. Commit Process:
-         ```
-         - Use conventional commits
-         - One commit per completed requirement
-         - Include all related changes
-         - Verify clean working tree
-         ```
+- The build or compile succeeds.
+- The program runs without errors.
+- The tests for the requirement pass.
+- The result matches the requirement.
+- Debug code is removed.
 
-examples:
-  - input: |
-      # Requirement: Add user login
-      1. Implement login form
-      2. Add validation
-      3. Connect to auth service
-      4. Add error handling
-    output: |
-      feat(auth): implement user login form
-      feat(auth): add form validation
-      feat(auth): connect authentication service
-      feat(auth): add error handling
+## Commits
 
-metadata:
-  priority: high
-  version: 1.0
-</rule>
+When the user asks for a commit:
+
+- Use a conventional commit.
+- Make one commit per completed requirement.
+- Include every change that belongs to that requirement.
+- Finish with a clean working tree.
+
+### Login
+
+Requirement: add user login.
+
+1. Implement the login form.
+2. Add validation.
+3. Connect to the auth service.
+4. Add error handling.
+
+When asked to commit, each finished step is its own commit:
+
+```text
+feat(auth): implement user login form
+feat(auth): add form validation
+feat(auth): connect authentication service
+feat(auth): add error handling
+```

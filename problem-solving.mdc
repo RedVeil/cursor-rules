@@ -1,110 +1,81 @@
 ---
-description: 
-globs: 
+description: Start with the simplest adequate solution and add a dependency only when the task requires one
 alwaysApply: true
 ---
-# Problem Solving Approach
 
-Rule for approaching problem-solving in a systematic, efficient manner.
+# Problem Solving
 
-<rule>
-name: problem_solving
-description: Standards for approaching and solving coding problems with emphasis on simplicity and industry standards
-filters:
-  - type: event
-    pattern: "code_change"
-  - type: event
-    pattern: "feature_request"
-  - type: event
-    pattern: "bug_fix"
+When solving a problem, start simple, understand the code you are changing, and prefer a proven approach over a new one.
 
-actions:
+## Simplicity first
 
-- type: suggest
-  message: |
-  When solving problems:
+- Start with the simplest solution that can work.
+- Avoid premature optimization.
+- Add complexity only after a simple solution proves inadequate.
+- Keep the code readable and maintainable.
 
-  1. Simplicity First:
+## Analysis before action
 
-     ```
-     - Start with the simplest possible solution
-     - Avoid premature optimization
-     - Only add complexity when simple solutions prove inadequate
-     - Keep code readable and maintainable
-     ```
+- Review the existing code before editing.
+- Understand the full context of the request.
+- Map the dependencies and the impact of the change.
+- Consider edge cases before implementing.
 
-  2. Analysis Before Action:
+## Prefer a proven approach
 
-     ```
-     - Review existing codebase thoroughly
-     - Understand the full context of the request
-     - Map out dependencies and impacts
-     - Consider edge cases early
-     ```
+- Look up the common industry solution for this kind of problem.
+- Follow an established pattern already used in this codebase.
+- Look at what mature projects do for the same problem.
+- Use a proven solution before inventing a new one.
 
-  3. Industry Standards:
+## Libraries
 
-     ```
-     - Research common industry solutions
-     - Follow established patterns and practices
-     - Consider what top companies/projects do
-     - Look for proven solutions before inventing new ones
-     ```
+- First try to solve it without a new dependency.
+- Add a library only when one of these is true:
+  - The task is substantially complex.
+  - The library is the industry standard for that task.
+  - A custom implementation would need extensive testing.
+  - The time cost of a custom solution is impractical.
+- Before adding it, check maintenance status, bundle size, and how widely it is used. Installing or upgrading it follows Dependency Safety.
 
-  4. Library Usage Guidelines:
-     ```
-     - First attempt to solve without external dependencies
-     - Only add libraries when:
-       • Task is significantly complex
-       • Library is industry standard
-       • Implementation would require extensive testing
-       • Time constraints make custom solution impractical
-     - Evaluate library:
-       • Maintenance status
-       • Bundle size impact
-       • Security implications
-       • Community adoption
-     ```
+### Dates
 
-examples:
+Bad: install a date library for one formatting call.
 
-- input: |
+```javascript
+npm install massive-date-library
+import { formatDate } from 'massive-date-library'
+formatDate(date)
+```
 
-  # Bad: Immediately reaching for a library
+Good: use the platform.
 
-  npm install massive-date-library
-  import { formatDate } from 'massive-date-library'
-  formatDate(date)
-
-  # Good: Simple solution first
-
-  const formatDate = (date) => {
+```javascript
+const formatDate = (date) => {
   return new Date(date).toLocaleDateString()
-  }
-  output: "Simple, no-dependency solution"
+}
+```
 
-- input: |
+### Validation
 
-  # Bad: Complex over-engineered solution
+Bad: a factory and a strategy for a length check.
 
-  class ValidationManagerFactory {
+```javascript
+class ValidationManagerFactory {
   static createValidator() {
-  return new ValidationManager(
-  new ValidationStrategy(),
-  new ValidationContext()
-  )
+    return new ValidationManager(
+      new ValidationStrategy(),
+      new ValidationContext()
+    )
   }
-  }
+}
+```
 
-  # Good: Simple direct approach
+Good: check the input directly.
 
-  function validate(input) {
+```javascript
+function validate(input) {
   if (!input) return false
   return input.length >= 3
-  }
-  output: "Simple, direct solution over complex architecture"
-
-metadata:
-priority: high
-version: 1.0
-</rule>
+}
+```

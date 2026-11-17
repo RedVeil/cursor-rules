@@ -1,73 +1,53 @@
 ---
-description: 
-globs: 
+description: When a change is rejected or redirected, remove the abandoned code before starting the new approach
 alwaysApply: true
 ---
- # Change Management
 
-Rule for managing code changes, reversions, and redirections based on user feedback.
+# Change Management
 
-<rule>
-name: change_management
-description: Standards for handling code changes, reversions, and redirections
-filters:
-  - type: event
-    pattern: "code_change"
-  - type: event
-    pattern: "user_feedback"
+When the user rejects a change or redirects the work, remove what no longer belongs before writing the new version.
 
-actions:
-  - type: suggest
-    message: |
-      When handling changes and user feedback:
+## Change rejection
 
-      1. Change Rejection:
-         ```
-         - Immediately revert all unnecessary changes
-         - Remove unused imports, variables, and functions
-         - Clean up any partial implementations
-         - Return file to last known good state
-         ```
+- Revert the unnecessary changes immediately.
+- Remove unused imports, variables, and functions.
+- Remove any partial implementation.
+- Return the file to the last known good state.
 
-      2. Change Redirection:
-         ```
-         - Understand the new direction completely before proceeding
-         - Don't try to preserve irrelevant code
-         - Start fresh with the new approach
-         - Don't mix old and new implementations
-         ```
+## Change redirection
 
-      3. Cleanup Checklist:
-         ```
-         - Remove unused imports
-         - Remove unused variables and functions
-         - Remove unnecessary style changes
-         - Remove unrelated changes
-         - Clean up any temporary state
-         ```
+- Understand the new direction before writing more code.
+- Do not keep code that the new direction does not need.
+- Start the new approach clean.
+- Do not mix the old implementation with the new one.
 
-      4. Before New Implementation:
-         ```
-         - Confirm complete understanding of new requirements
-         - Get clarification if needed
-         - Plan the implementation
-         - Start clean
-         ```
+## Cleanup
 
-examples:
-  - input: |
-      # Original implementation
-      <button class="resize-handle">
-        <ResizeIcon />
-      </button>
+- Remove unused imports.
+- Remove unused variables and functions.
+- Remove style changes that the task did not ask for.
+- Remove unrelated changes.
+- Remove temporary state.
 
-      # User wants OS-style resize
-      # First: Remove everything not needed
-      # Then: Implement new approach
-      <div class="resize-handle" />
-    output: "Clean reversion and new implementation"
+## Before the new implementation
 
-metadata:
-  priority: high
-  version: 1.0
-</rule>
+- Confirm you understand the new requirement.
+- Ask when something material is still unclear.
+- Plan the implementation.
+- Start from the cleaned file.
+
+### Resize handle
+
+Original:
+
+```html
+<button class="resize-handle">
+  <ResizeIcon />
+</button>
+```
+
+The user wants an OS-style resize. Remove the button and the icon first, then implement the new handle:
+
+```html
+<div class="resize-handle" />
+```
